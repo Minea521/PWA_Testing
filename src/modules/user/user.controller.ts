@@ -14,25 +14,36 @@ import { createUserDto } from './dto/create-user.dto';
 export class UsersController {
   constructor(private readonly userService: UserService) {}
 
-  @Get('/:username')
-  getUser(@Param('username') username: string) {
-    return this.userService.getUser(username);
+  // Show all users
+  @Get()
+  findAll() {
+    return this.userService.findAll();
   }
 
-  @Post('/')
-  createUser(@Body() body: createUserDto) {
-    return this.userService.createUser(body);
+  // Show one user by id (example: /users/1)
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.userService.findOne(Number(id));
   }
 
-  @Patch('/:username')
-  updateUser(
-    @Body() body: { username: string; email: string; password: string },
-  ) {
-    return this.userService.updateUser(body);
+  // Create new user
+  @Post()
+  create(@Body() body: createUserDto) {
+    this.userService.create(body);
+    return { message: 'User created' };
   }
 
-  @Delete('/users/:username')
-  deleteUser(@Param('username') username: string) {
-    return this.userService.deleteUser(username);
+  // Update user (example: /users/1)
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() body: any) {
+    this.userService.update(Number(id), body);
+    return { message: 'User updated' };
+  }
+
+  // Delete user (example: /users/1)
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    this.userService.remove(Number(id));
+    return { message: 'User deleted' };
   }
 }

@@ -13,27 +13,44 @@ import { TaskService } from './task.service';
 export class TasksController {
   constructor(private readonly taskService: TaskService) {}
 
-  @Get('/:id')
-  getTask(@Param('id') id: string) {
-    return this.taskService.getTask(id);
-  }
-  @Post('/')
-  createTask(@Body() body: any) {
-    return this.taskService.createTask(body);
+  // Show all tasks
+  @Get()
+  findAll() {
+    return this.taskService.findAll();
   }
 
-  @Patch('/:id/done')
-  markTaskAsDone(@Body() body: any, @Param('id') id: string) {
-    return this.taskService.updateTask(id, body);
+  // Show tasks of one user
+  @Get('user/:userId')
+  findByUser(@Param('userId') userId: string) {
+    return this.taskService.findByUser(Number(userId));
   }
 
-  @Patch('/:id/pending')
-  markTaskAsPending(@Body() body: any, @Param('id') id: string) {
-    return this.taskService.updateTask(id, body);
+  // Show one task
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.taskService.findOne(Number(id));
   }
 
-  @Delete('/:id')
-  deleteTask(@Param('id') id: string) {
-    return this.taskService.deleteTask(id);
+  // Create new task
+  // You send everything in the body (title, description, user: {id: ...})
+  @Post()
+  create(@Body() body: any) {
+    // We extract the task data and the user object
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { user, ...taskData } = body;
+    return this.taskService.create(taskData, user);
+  }
+
+  // Update task
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.taskService.update(Number(id), body);
+  }
+
+  // Delete task
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    this.taskService.remove(Number(id));
+    return { message: 'Task deleted' };
   }
 }
