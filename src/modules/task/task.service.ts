@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Task } from './task.entity'; // adjust path
-import { User } from '../user/user.entity'; // if needed for assignment
+import { Task } from './task.entity';
+import { CreateTaskDto } from './dto/create-task.dto';
 
 @Injectable()
 export class TaskService {
@@ -11,24 +14,22 @@ export class TaskService {
     private readonly taskRepository: Repository<Task>,
   ) {}
 
-  // CREATE a new task (you'll usually pass userId from controller/auth)
-  async create(taskData: Partial<Task>, user: User): Promise<Task> {
-    const newTask = this.taskRepository.create({
-      ...taskData,
-      user, // assign the owner (relation)
+  async create(createTaskDto: CreateTaskDto, userId: number): Promise<Task> {
+    const task = this.taskRepository.create({
+      ...createTaskDto,
+      user: { id: userId },
     });
-
-    return this.taskRepository.save(newTask);
+    const saved = await this.taskRepository.save(task);
+    return Array.isArray(saved) ? (saved[0] as Task) : (saved as Task);
   }
 
-  // READ all tasks (optionally filter by user)
-  async findAll(): Promise<Task[]> {
+  async findAll(userId: number): Promise<Task[]> {
     return this.taskRepository.find({
-      relations: ['user'], // load the owner user if needed
+      where: { user: { id: userId } },
+      relations: ['user'],
     });
   }
 
-  // READ tasks for a specific user
   async findByUser(userId: number): Promise<Task[]> {
     return this.taskRepository.find({
       where: { user: { id: userId } },
@@ -36,8 +37,7 @@ export class TaskService {
     });
   }
 
-  // READ one task by id
-  async findOne(id: number): Promise<Task> {
+  async findOne(id: number, sub: any): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { id },
       relations: ['user'],
@@ -50,18 +50,18 @@ export class TaskService {
     return task;
   }
 
-  // UPDATE task
-  async update(id: number, updateData: Partial<Task>): Promise<Task> {
-    const task = await this.findOne(id);
+  async update(id: number, updateData: Partial<Task>, sub: any): Promise<Task> {
+    const result = await this.taskRepository.update(id, updateData);
 
-    Object.assign(task, updateData);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Task with ID ${id} not found`);
+    }
 
-    return this.taskRepository.save(task);
+    return this.findOne(id, sub);
   }
 
-  // DELETE task
-  async remove(id: number): Promise<void> {
-    const task = await this.findOne(id);
+  async remove(id: number, sub: any): Promise<void> {
+    const task = await this.findOne(id, sub);
     await this.taskRepository.remove(task);
   }
 }

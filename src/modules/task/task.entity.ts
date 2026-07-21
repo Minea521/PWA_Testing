@@ -7,7 +7,7 @@ export class Task {
   id: number;
 
   @Column()
-  name: string;
+  title: string;
 
   @Column({ nullable: true })
   description: string;
