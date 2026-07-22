@@ -21,9 +21,28 @@
           <q-item-label caption>{{ task.description }}</q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-btn icon="delete" flat round color="negative" @click="onDelete(task.id)" />
+          <div class="row q-gutter-xs">
+            <q-btn icon="edit" flat round color="primary" @click="openEdit(task)" />
+            <q-btn icon="delete" flat round color="negative" @click="onDelete(task.id)" />
+          </div>
         </q-item-section>
       </q-item>
+
+      <q-dialog v-model="editDialog">
+        <q-card style="width: 350px">
+          <q-card-section>
+            <div class="text-h6">Edit Task</div>
+          </q-card-section>
+          <q-card-section>
+            <q-input v-model="editTitle" label="Title" />
+            <q-input v-model="editDescription" label="Description" class="q-mt-sm" />
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" v-close-popup />
+            <q-btn flat label="Save" color="primary" @click="onSaveEdit" v-close-popup />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </q-list>
 
     <q-spinner v-else color="primary" size="2em" />
@@ -43,6 +62,11 @@ const router = useRouter();
 const newTitle = ref('');
 const newDescription = ref('');
 
+const editDialog = ref(false);
+const editTaskId = ref('');
+const editTitle = ref('');
+const editDescription = ref('');
+
 onMounted(() => {
   taskStore.fetchTasks();
 });
@@ -55,7 +79,33 @@ async function onCreate() {
 }
 
 async function onDelete(id: number) {
-  await taskStore.deleteTask(id);
+  try{
+    await taskStore.deleteTask(id);
+  } catch (error: any){
+    console.error(error.message);
+  }
+}
+
+async function onUpdate(id: number, update: Partial<Task>){
+  try{
+    await taskStore.updateTask(id, updates);
+  } catch (error: any){
+    console.error(error.message);
+  }
+}
+
+function openEdit(task: any) {
+  editTaskId.value = task.id;
+  editTitle.value = task.title;
+  editDescription.value = task.description || '';
+  editDialog.value = true;
+}
+
+async function onSaveEdit() {
+  await taskStore.updateTask(editTaskId.value, {
+    title: editTitle.value,
+    description: editDescription.value,
+  });
 }
 
 async function onLogout() {
