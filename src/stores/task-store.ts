@@ -7,6 +7,10 @@ interface Task {
   title: string;
   description?: string;
   completed?: boolean;
+  createdAt?: string;
+  scheduledAt?: string | null;
+  completedAt?: string | null;
+  notified?: boolean;
 }
 
 function generateTempId() {
@@ -49,7 +53,11 @@ export const useTaskStore = defineStore('task', {
           id: task.id,
           title: task.title,
           description: task.description || '',
-          completed: task.completed || false,
+          completed: task.completed || null,
+          createdAt: task.createdAt || new Date().toISOString(),
+          scheduledAt: task.scheduledAt || null,
+          completedAt: task.completedAt || null, 
+          notified: task.notified || false,
         });
       }
     },
@@ -62,6 +70,10 @@ export const useTaskStore = defineStore('task', {
         title: doc.title,
         description: doc.description,
         completed: doc.completed,
+        createdAt: doc.createdAt,
+        scheduledAt: doc.scheduledAt,
+        completedAt: doc.completedAt,
+        notified: doc.notified,
       }));
     },
 
@@ -76,19 +88,19 @@ export const useTaskStore = defineStore('task', {
       });
     },
 
-    async createTask(title: string, description: string) {
+    async createTask(title: string, description: string, scheduledAt?: string | null) {
       try {
-        const response = await api.post('/tasks', { title, description });
+        const response = await api.post('/tasks', { title, description, scheduledAt });
         const newTask = { ...response.data, id: String(response.data.id) };
         this.tasks.push(newTask);
         await this.cacheTasks(this.tasks);
       } catch {
         // Offline: create locally with a temp ID, queue for later sync
         const tempId = generateTempId();
-        const newTask: Task = { id: tempId, title, description, completed: false };
+        const newTask: Task = { id: tempId, title, description, completed: false, createdAt: new Date().toISOString(), scheduledAt: scheduledAt || null };
         this.tasks.push(newTask);
         await this.cacheTasks(this.tasks);
-        await this.queueOperation('create', tempId, { title, description });
+        await this.queueOperation('create', tempId, { title, description, scheduledAt });
       }
     },
 
@@ -148,5 +160,17 @@ export const useTaskStore = defineStore('task', {
       }
       // no trailing cacheTasks() call here anymore
     },
+
+    async markNotified(id: string) {
+      const index = this.tasks.findIndex((t) => t.id === id);
+      if (index !== -1) {
+        this.tasks[index] = { ...this.tasks[index], notified: true } as Task;
+        await this.cacheTasks(this.tasks);
+      }
+    },
+
+    async completeTask(id: string) {
+      await this.updateTask(id, { completed: true, completedAt: new Date().toISOString() });
+    }
   },
 });
