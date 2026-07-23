@@ -15,7 +15,7 @@ import {
 import { TaskService } from './task.service';
 import { Task } from './task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto'; // create this, see below
+import { UpdateTaskDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth/jwt-auth.guard';
 
 @Controller('tasks')
@@ -52,7 +52,16 @@ export class TasksController {
     if (isNaN(numericId)) {
       throw new BadRequestException('Invalid ID format');
     }
-    return this.taskService.update(numericId, updateTaskDto, req.user.sub);
+    const updatePayload: Partial<Task> = {
+      ...updateTaskDto,
+      completedAt: updateTaskDto.completedAt
+        ? new Date(updateTaskDto.completedAt)
+        : undefined,
+      scheduledAt: updateTaskDto.scheduledAt
+        ? new Date(updateTaskDto.scheduledAt)
+        : undefined,
+    };
+    return this.taskService.update(numericId, updatePayload, req.user.sub);
   }
 
   @Delete(':id')
