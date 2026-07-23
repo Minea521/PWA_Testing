@@ -9,7 +9,8 @@ declare module 'vue' {
 }
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  // baseURL: 'http://localhost:3000',
+  baseURL: 'https://pwa-testing-0ph7.onrender.com',
   withCredentials: true,
 });
 
