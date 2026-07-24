@@ -30,17 +30,19 @@ export class AuthController {
       loginDto.password,
     );
 
+    const isCrossSite = process.env.NODE_ENV === 'production';
+
     res.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isCrossSite,
+      sameSite: isCrossSite ? 'none' : 'strict',
       maxAge: 15 * 60 * 1000, // 15 min
     });
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isCrossSite,
+      sameSite: isCrossSite ? 'none' : 'strict',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
