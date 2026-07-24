@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { api } from './../boot/axios';
+import { useTaskStore } from './task-store';
 
 interface User {
   id: number;
@@ -29,6 +30,9 @@ export const useAuthStore = defineStore('auth', {
       this.user = null;
       this.isLoggedIn = false;
       localStorage.removeItem('wasLoggedIn');
+
+      const taskStore = useTaskStore();
+      await taskStore.clearCache();
     },
     async checkAuth() {
       try {

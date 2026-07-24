@@ -67,6 +67,13 @@ export const useTaskStore = defineStore('task', {
       }
     },
 
+    async clearCache() {
+      const db = await getDb();
+      await db.tasks.find().remove();
+      await db.syncQueue.find().remove();
+      this.tasks = [];
+    },
+
     async loadCachedTasks(): Promise<Task[]> {
       const db = await getDb();
       const docs = await db.tasks.find().exec();
