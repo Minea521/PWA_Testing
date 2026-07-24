@@ -10,18 +10,19 @@
     </q-banner>
 
     <!-- Create form -->
-    <q-form @submit="onCreate" class="q-mb-md row q-gutter-sm items-start">
-      <q-input v-model="newTitle" label="Title" dense outlined class="col" />
-      <q-input v-model="newDescription" label="Description" dense outlined class="col" />
-      <q-input
-        v-model="newScheduledAt"
-        label="Scheduled time (optional)"
-        type="datetime-local"
-        dense
-        outlined
-        class="col"
-      />
-      <q-btn type="submit" color="primary" label="Add Task" />
+    <q-form @submit="onCreate" class="row q-col-gutter-sm items-start q-mb-md">
+      <div class="col-12 col-sm-4">
+        <q-input v-model="newTitle" label="Title" dense outlined />
+      </div>
+      <div class="col-12 col-sm-4">
+        <q-input v-model="newDescription" label="Description" dense outlined />
+      </div>
+      <div class="col-12 col-sm-3">
+        <q-input v-model="newScheduledAt" label="Scheduled time (optional)" type="datetime-local" dense outlined />
+      </div>
+      <div class="col-12 col-sm-1 flex items-center">
+        <q-btn type="submit" color="primary" label="Add Task" class="full-width" />
+      </div>
     </q-form>
 
     <!-- Active tasks -->

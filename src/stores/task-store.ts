@@ -29,17 +29,22 @@ export const useTaskStore = defineStore('task', {
       this.loading = true;
       this.isOffline = false;
 
-      // Always load whatever's cached first, so state is never empty mid-process
       this.tasks = await this.loadCachedTasks();
 
       try {
         await this.syncPendingChanges();
-
         const response = await api.get('/tasks');
         this.tasks = response.data.map((t: any) => ({ ...t, id: String(t.id) }));
         await this.cacheTasks(this.tasks);
-      } catch (error) {
-        this.isOffline = true;
+      } catch (error: any) {
+        if (!error.response) {
+          // No response at all = genuine network failure (offline)
+          this.isOffline = true;
+        } else {
+          // Got a response, but it was an error (401, 500, etc.) — NOT an offline issue
+          console.error('Task fetch failed with status:', error.response.status);
+          // Optionally: if 401, this could mean the session is genuinely invalid
+        }
       } finally {
         this.loading = false;
       }
