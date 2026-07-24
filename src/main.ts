@@ -23,7 +23,7 @@ async function bootstrap() {
   //   credentials: true,
   // });
   app.enableCors({
-    origin: ['http://localhost:9000', 'http://localhost:9200', 'http://localhost:4000'],
+    origin: ['http://localhost:9000', 'http://localhost:9200', 'http://localhost:4000', 'https://pwa-testing-wheat.vercel.app/'],
     credentials: true,
   });
   await app.listen(process.env.PORT ?? 3000);
