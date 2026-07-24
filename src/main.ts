@@ -16,12 +16,6 @@ async function bootstrap() {
     }),
   );
 
-  // app.enableCors({
-  //   origin: [process.env.FRONTEND_URL || 'http://localhost:9000', 'http://localhost:9200', 'http://localhost:4000'],
-  //   methods: 'GET,POST,PATCH,DELETE,OPTIONS',
-  //   allowedHeaders: 'Content-Type, Authorization',
-  //   credentials: true,
-  // });
   app.enableCors({
     origin: ['http://localhost:9000', 'http://localhost:9200', 'http://localhost:4000', 'https://pwa-testing-wheat.vercel.app'],
     methods: 'GET,POST,PATCH,DELETE,OPTIONS',
