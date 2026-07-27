@@ -17,7 +17,7 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: ['http://localhost:9000', 'http://localhost:9200', 'http://localhost:4000', 'https://pwa-testing-phi.vercel.app/'],
+    origin: ['http://localhost:9000', 'http://localhost:9200', 'http://localhost:4000', 'https://pwa-testing-phi.vercel.app'],
     methods: 'GET,POST,PATCH,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
     credentials: true,
