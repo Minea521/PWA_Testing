@@ -1,102 +1,104 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="row items-center justify-between q-mb-md">
-      <div class="text-h5">My Tasks</div>
-      <q-btn label="Logout" color="negative" flat @click="onLogout" />
-    </div>
-
-    <q-banner v-if="taskStore.isOffline" class="bg-warning text-white q-mb-md">
-      You're offline — showing cached tasks. Some data may be outdated.
-    </q-banner>
-
-    <!-- Create form -->
-    <q-form @submit="onCreate" class="row q-col-gutter-sm items-start q-mb-md">
-      <div class="col-12 col-sm-4">
-        <q-input v-model="newTitle" label="Title" dense outlined />
+    <q-pull-to-refresh @refresh="onRefresh">
+      <div class="row items-center justify-between q-mb-md">
+        <div class="text-h5">My Tasks</div>
+        <q-btn label="Logout" color="negative" flat @click="onLogout" />
       </div>
-      <div class="col-12 col-sm-4">
-        <q-input v-model="newDescription" label="Description" dense outlined />
-      </div>
-      <div class="col-12 col-sm-3">
-        <q-input v-model="newScheduledAt" label="Scheduled time (optional)" type="datetime-local" dense outlined />
-      </div>
-      <div class="col-12 col-sm-1 flex items-center">
-        <q-btn type="submit" color="primary" label="Add Task" class="full-width" />
-      </div>
-    </q-form>
 
-    <!-- Active tasks -->
-    <div class="text-subtitle1 q-mb-sm">Active Tasks</div>
-    <q-list bordered separator v-if="!taskStore.loading" class="q-mb-lg">
-      <q-item v-for="task in activeTasks" :key="task.id">
-        <q-item-section side top>
-          <q-checkbox :model-value="false" @update:model-value="onComplete(task.id)" />
-        </q-item-section>
-        <q-item-section>
-          <q-item-label>{{ task.title }}</q-item-label>
-          <q-item-label caption>{{ task.description }}</q-item-label>
-          <q-item-label caption v-if="task.scheduledAt">
-            Scheduled: {{ formatDate(task.scheduledAt) }}
-          </q-item-label>
-        </q-item-section>
-        <q-item-section side>
-          <div class="text-caption text-grey">{{ formatDate(task.createdAt) }}</div>
-        </q-item-section>
-        <q-item-section side>
-          <q-btn icon="edit" flat round color="primary" @click="openEdit(task)" />
-          <q-btn icon="delete" flat round color="negative" @click="onDelete(task.id)" />
-        </q-item-section>
-      </q-item>
-      <q-item v-if="activeTasks.length === 0">
-        <q-item-section class="text-grey">No active tasks</q-item-section>
-      </q-item>
-    </q-list>
+      <q-banner v-if="taskStore.isOffline" class="bg-warning text-white q-mb-md">
+        You're offline — showing cached tasks. Some data may be outdated.
+      </q-banner>
 
-    <q-spinner v-else color="primary" size="2em" />
+      <!-- Create form -->
+      <q-form @submit="onCreate" class="row q-col-gutter-sm items-start q-mb-md">
+        <div class="col-12 col-sm-4">
+          <q-input v-model="newTitle" label="Title" dense outlined />
+        </div>
+        <div class="col-12 col-sm-4">
+          <q-input v-model="newDescription" label="Description" dense outlined />
+        </div>
+        <div class="col-12 col-sm-3">
+          <q-input v-model="newScheduledAt" label="Scheduled time (optional)" type="datetime-local" dense outlined />
+        </div>
+        <div class="col-12 col-sm-1 flex items-center">
+          <q-btn type="submit" color="primary" label="Add Task" class="full-width" />
+        </div>
+      </q-form>
 
-    <!-- History section -->
-    <q-expansion-item label="History" icon="history" class="q-mb-md">
-      <q-list bordered separator>
-        <q-item v-for="task in historyTasks" :key="task.id">
+      <!-- Active tasks -->
+      <div class="text-subtitle1 q-mb-sm">Active Tasks</div>
+      <q-list bordered separator v-if="!taskStore.loading" class="q-mb-lg">
+        <q-item v-for="task in activeTasks" :key="task.id">
           <q-item-section side top>
-            <q-checkbox :model-value="true" @update:model-value="onUncomplete(task.id)" />
+            <q-checkbox :model-value="false" @update:model-value="onComplete(task.id)" />
           </q-item-section>
           <q-item-section>
-            <q-item-label class="text-strike text-grey">{{ task.title }}</q-item-label>
+            <q-item-label>{{ task.title }}</q-item-label>
             <q-item-label caption>{{ task.description }}</q-item-label>
+            <q-item-label caption v-if="task.scheduledAt">
+              Scheduled: {{ formatDate(task.scheduledAt) }}
+            </q-item-label>
           </q-item-section>
           <q-item-section side>
-            <div class="text-caption text-grey">Completed: {{ formatDate(task.completedAt) }}</div>
+            <div class="text-caption text-grey">{{ formatDate(task.createdAt) }}</div>
+          </q-item-section>
+          <q-item-section side>
+            <q-btn icon="edit" flat round color="primary" @click="openEdit(task)" />
+            <q-btn icon="delete" flat round color="negative" @click="onDelete(task.id)" />
           </q-item-section>
         </q-item>
-        <q-item v-if="historyTasks.length === 0">
-          <q-item-section class="text-grey">No completed tasks yet</q-item-section>
+        <q-item v-if="activeTasks.length === 0">
+          <q-item-section class="text-grey">No active tasks</q-item-section>
         </q-item>
       </q-list>
-    </q-expansion-item>
 
-    <!-- Edit dialog -->
-    <q-dialog v-model="editDialog">
-      <q-card style="width: 350px">
-        <q-card-section>
-          <div class="text-h6">Edit Task</div>
-        </q-card-section>
-        <q-card-section>
-          <q-input v-model="editTitle" label="Title" />
-          <q-input v-model="editDescription" label="Description" class="q-mt-sm" />
-          <q-input
-            v-model="editScheduledAt"
-            label="Scheduled time"
-            type="datetime-local"
-            class="q-mt-sm"
-          />
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" v-close-popup />
-          <q-btn flat label="Save" color="primary" @click="onSaveEdit" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+      <q-spinner v-else color="primary" size="2em" />
+
+      <!-- History section -->
+      <q-expansion-item label="History" icon="history" class="q-mb-md">
+        <q-list bordered separator>
+          <q-item v-for="task in historyTasks" :key="task.id">
+            <q-item-section side top>
+              <q-checkbox :model-value="true" @update:model-value="onUncomplete(task.id)" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="text-strike text-grey">{{ task.title }}</q-item-label>
+              <q-item-label caption>{{ task.description }}</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <div class="text-caption text-grey">Completed: {{ formatDate(task.completedAt) }}</div>
+            </q-item-section>
+          </q-item>
+          <q-item v-if="historyTasks.length === 0">
+            <q-item-section class="text-grey">No completed tasks yet</q-item-section>
+          </q-item>
+        </q-list>
+      </q-expansion-item>
+
+      <!-- Edit dialog -->
+      <q-dialog v-model="editDialog">
+        <q-card style="width: 350px">
+          <q-card-section>
+            <div class="text-h6">Edit Task</div>
+          </q-card-section>
+          <q-card-section>
+            <q-input v-model="editTitle" label="Title" />
+            <q-input v-model="editDescription" label="Description" class="q-mt-sm" />
+            <q-input
+              v-model="editScheduledAt"
+              label="Scheduled time"
+              type="datetime-local"
+              class="q-mt-sm"
+            />
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" v-close-popup />
+            <q-btn flat label="Save" color="primary" @click="onSaveEdit" v-close-popup />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+    </q-pull-to-refresh>
   </q-page>
 </template>
 
@@ -250,6 +252,16 @@ function fireNotification(task: any) {
 async function onLogout() {
   await authStore.logout();
   router.push('/login');
+}
+
+async function onRefresh(done: () => void) {
+  try {
+    await taskStore.fetchTasks();
+  } catch (error: any) {
+    console.error(error.message);
+  } finally {
+    done();
+  }
 }
 
 onUnmounted(() => {
