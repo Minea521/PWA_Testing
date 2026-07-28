@@ -146,11 +146,12 @@ onMounted(async () => {
 
 async function onCreate() {
   if (!newTitle.value) return;
-  await taskStore.createTask(
-    newTitle.value,
-    newDescription.value,
-    newScheduledAt.value || undefined,
-  );
+
+  const scheduledAtUtc = newScheduledAt.value
+    ? new Date(newScheduledAt.value).toISOString()
+    : undefined;
+
+  await taskStore.createTask(newTitle.value, newDescription.value, scheduledAtUtc);
   newTitle.value = '';
   newDescription.value = '';
   newScheduledAt.value = '';
@@ -180,20 +181,31 @@ async function onUncomplete(id: string) {
   }
 }
 
+function toLocalDatetimeInput(isoString?: string | null) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function openEdit(task: any) {
   editTaskId.value = task.id;
   editTitle.value = task.title;
   editDescription.value = task.description || '';
-  editScheduledAt.value = task.scheduledAt || '';
+  editScheduledAt.value = toLocalDatetimeInput(task.scheduledAt); // convert back for the input
   editDialog.value = true;
 }
 
 async function onSaveEdit() {
+  const scheduledAtUtc = editScheduledAt.value
+    ? new Date(editScheduledAt.value).toISOString()
+    : null;
+
   try {
     await taskStore.updateTask(editTaskId.value, {
       title: editTitle.value,
       description: editDescription.value,
-      scheduledAt: editScheduledAt.value || null,
+      scheduledAt: scheduledAtUtc,
     });
   } catch (error: any) {
     console.error(error.message);
